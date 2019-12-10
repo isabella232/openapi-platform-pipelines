@@ -18,7 +18,10 @@ import childProcess from 'child_process';
  *  2. For existed files, run "git update-index --no-assume-unchanged"
  */
 
-export const pipelineIgnoreFiles = ['.git', '.gitignore'];
+export const pipelineIgnoreFiles = [
+  '.git', '.gitignore', ".github",
+  'CODE_OF_CONDUCT.md', 'README.md', 'SECURITY.md', "LICENSE"
+];
 const copyFiles = (srcPath: string, dstPath: string, newFileList: string[]) => {
   console.log(`Overwriting pipeline file ${dstPath}`);
 
