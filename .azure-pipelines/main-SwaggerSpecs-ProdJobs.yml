@@ -1,0 +1,10 @@
+jobs:
+- template: BranchProtectionForPrivateRepo.yml
+- template: Syntax.yml
+- template: Semantic.yml
+- template: Avocado.yml
+- template: ModelValidation.yml
+- template: BreakingChange.yml
+- template: LintDiff.yml
+- template: NetworkValidation.yml
+- template: Spellcheck.yml
