@@ -3,6 +3,10 @@ import path from 'path';
 import childProcess from 'child_process';
 import { removeFiles, pipelineIgnoreFiles } from './pipeline-env-enable';
 
+/**
+ * See "pipeline-env-enable.ts" for document.
+ */
+
 const removePipelineFile = (srcPath: string, dstPath: string) => {
   console.log(`Resetting pipeline file ${dstPath}`);
 
