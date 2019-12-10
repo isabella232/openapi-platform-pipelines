@@ -1,6 +1,6 @@
 jobs:
-- template: .azure-pipelines/BranchProtectionForPrivateRepo.yml
-- template: .azure-pipelines/BreakingChange.yml
-- template: .azure-pipelines/ModelValidation.yml
-- template: .azure-pipelines/PrettierCheck.yml
-- template: .azure-pipelines/Avocado.yml
+- template: BranchProtectionForPrivateRepo.yml
+- template: BreakingChange.yml
+- template: ModelValidation.yml
+- template: PrettierCheck.yml
+- template: Avocado.yml
