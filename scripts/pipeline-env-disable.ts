@@ -13,9 +13,7 @@ const removePipelineFile = (srcPath: string, dstPath: string) => {
   if (!fs.lstatSync(srcPath).isDirectory()) {
     try {
       // For file that already exist in index
-      childProcess.execSync(`git update-index --no-skip-worktree ${dstPath}`, {
-        stdio: "ignore"
-      });
+      childProcess.execSync(`git update-index --no-skip-worktree ${dstPath}`);
       childProcess.execSync(`git checkout HEAD ${dstPath}`);
     } catch (e) {
       // For file that doesn't exist in index
@@ -36,6 +34,7 @@ const removePipelineFile = (srcPath: string, dstPath: string) => {
 
 const main = () => {
   fs.writeFileSync('.git/info/exclude', '');
+  fs.writeFileSync('.git/info/sparse-checkout', '/*\n');
   removePipelineFile('tmp', '.');
   removeFiles('tmp');
 };

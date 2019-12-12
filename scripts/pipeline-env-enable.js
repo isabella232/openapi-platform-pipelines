@@ -25,18 +25,13 @@ exports.pipelineIgnoreFiles = [
     '.git', '.gitignore', ".github",
     'CODE_OF_CONDUCT.md', 'README.md', 'SECURITY.md', "LICENSE"
 ];
-const copyFiles = (srcPath, dstPath, newFileList) => {
+const copyFiles = (srcPath, dstPath, newFileList, existFileList) => {
     console.log(`Overwriting pipeline file ${dstPath}`);
     if (!fs_1.default.lstatSync(srcPath).isDirectory()) {
         const fileExist = fs_1.default.existsSync(dstPath);
         fs_1.default.copyFileSync(srcPath, dstPath);
         if (fileExist) {
-            try {
-                child_process_1.default.execSync(`git update-index --skip-worktree ${dstPath}`);
-            }
-            catch (e) {
-                // Ignore error
-            }
+            existFileList.push(dstPath);
         }
         else {
             newFileList.push(dstPath);
@@ -50,7 +45,7 @@ const copyFiles = (srcPath, dstPath, newFileList) => {
         if (exports.pipelineIgnoreFiles.includes(fileName)) {
             continue;
         }
-        copyFiles(path_1.default.join(srcPath, fileName), path_1.default.join(dstPath, fileName), newFileList);
+        copyFiles(path_1.default.join(srcPath, fileName), path_1.default.join(dstPath, fileName), newFileList, existFileList);
     }
 };
 exports.removeFiles = (dstPath) => {
@@ -64,10 +59,26 @@ exports.removeFiles = (dstPath) => {
     fs_1.default.rmdirSync(dstPath);
 };
 const main = () => {
+    child_process_1.default.execSync('git config core.sparseCheckout true');
     const newFileList = [];
-    copyFiles('tmp', '.', newFileList);
+    let existFileList = [];
+    copyFiles('tmp', '.', newFileList, existFileList);
+    existFileList = existFileList.concat(newFileList);
     newFileList.push('');
     fs_1.default.appendFileSync('.git/info/exclude', newFileList.join('\n'));
+    existFileList.forEach(filePath => {
+        try {
+            child_process_1.default.execSync(`git update-index --skip-worktree ${filePath}`);
+        }
+        catch (e) {
+            // Pass
+        }
+    });
+    existFileList = existFileList.map(filePath => `!${filePath}`);
+    existFileList.unshift('/*');
+    existFileList.push('');
+    fs_1.default.writeFileSync('.git/info/sparse-checkout', existFileList.join('\n'));
+    console.warn('If you encounter any error regarding above files, please run "npm run disable-env" and try again.');
     console.log('Launching "npm ci"');
     child_process_1.default.execSync('npm ci');
 };

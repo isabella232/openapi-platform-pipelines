@@ -22,18 +22,14 @@ export const pipelineIgnoreFiles = [
   '.git', '.gitignore', ".github",
   'CODE_OF_CONDUCT.md', 'README.md', 'SECURITY.md', "LICENSE"
 ];
-const copyFiles = (srcPath: string, dstPath: string, newFileList: string[]) => {
+const copyFiles = (srcPath: string, dstPath: string, newFileList: string[], existFileList: string[]) => {
   console.log(`Overwriting pipeline file ${dstPath}`);
 
   if (!fs.lstatSync(srcPath).isDirectory()) {
     const fileExist = fs.existsSync(dstPath);
     fs.copyFileSync(srcPath, dstPath);
     if (fileExist) {
-      try {
-        childProcess.execSync(`git update-index --skip-worktree ${dstPath}`);
-      } catch (e) {
-        // Ignore error
-      }
+      existFileList.push(dstPath)
     } else {
       newFileList.push(dstPath);
     }
@@ -47,7 +43,7 @@ const copyFiles = (srcPath: string, dstPath: string, newFileList: string[]) => {
     if (pipelineIgnoreFiles.includes(fileName)) {
       continue;
     }
-    copyFiles(path.join(srcPath, fileName), path.join(dstPath, fileName), newFileList);
+    copyFiles(path.join(srcPath, fileName), path.join(dstPath, fileName), newFileList, existFileList);
   }
 }
 
@@ -64,10 +60,28 @@ export const removeFiles = (dstPath: string) => {
 }
 
 const main = () => {
+  childProcess.execSync('git config core.sparseCheckout true');
+
   const newFileList: string[] = [];
-  copyFiles('tmp', '.', newFileList);
+  let existFileList: string[] = [];
+  copyFiles('tmp', '.', newFileList, existFileList);
+
+  existFileList = existFileList.concat(newFileList);
   newFileList.push('');
   fs.appendFileSync('.git/info/exclude', newFileList.join('\n'));
+
+  existFileList.forEach(filePath => {
+    try {
+      childProcess.execSync(`git update-index --skip-worktree ${filePath}`);
+    } catch (e) {
+      // Pass
+    }
+  });
+  existFileList = existFileList.map(filePath => `!${filePath}`);
+  existFileList.unshift('/*');
+  existFileList.push('');
+  fs.writeFileSync('.git/info/sparse-checkout', existFileList.join('\n'));
+  console.warn('If you encounter any error regarding above files, please run "npm run disable-env" and try again.');
 
   console.log('Launching "npm ci"')
   childProcess.execSync('npm ci');
