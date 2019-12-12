@@ -9,13 +9,13 @@ import childProcess from 'child_process';
  * performing following action:
  * 
  *  1. For files that doesn't exist on main repo, add the file path to ".git/info/exclude"
- *  2. For files that already exist on main repo, run "git update-index --assume-unchanged"
+ *  2. For files that already exist on main repo, run "git update-index --skip-worktree"
  * 
  * If we want to revert changes to make some actual edit on overwritten files, we can run
  * "npm run disable-env". It will launch "scripts/pipeline-env-disable.ts":
  * 
  *  1. For not existed files, remove the file and clear ".git/info/exclude"
- *  2. For existed files, run "git update-index --no-assume-unchanged"
+ *  2. For existed files, run "git update-index --no-skip-worktree"
  */
 
 export const pipelineIgnoreFiles = [
@@ -30,7 +30,7 @@ const copyFiles = (srcPath: string, dstPath: string, newFileList: string[]) => {
     fs.copyFileSync(srcPath, dstPath);
     if (fileExist) {
       try {
-        childProcess.execSync(`git update-index --assume-unchanged ${dstPath}`);
+        childProcess.execSync(`git update-index --skip-worktree ${dstPath}`);
       } catch (e) {
         // Ignore error
       }
